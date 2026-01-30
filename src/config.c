@@ -14,6 +14,7 @@
 /* --- Defaults ("Snappy Slate" Theme) --- */
 static void set_defaults(Config *cfg) {
   cfg->mode = MODE_CONTEXT;
+  cfg->follow_monitor = false;
 
   /* Default Theme Colors */
   cfg->background = 0x1e1e2e;
@@ -80,6 +81,9 @@ static void apply_value(Config *cfg, const char *section, const char *key,
         cfg->mode = MODE_CONTEXT;
       else if (strcasecmp(val, "overview") == 0)
         cfg->mode = MODE_OVERVIEW;
+    } else if (strcasecmp(key, "follow_monitor") == 0) {
+      cfg->follow_monitor =
+          (strcasecmp(val, "true") == 0 || strcmp(val, "1") == 0);
     }
   }
   /* Colors (from theme or manual override) */

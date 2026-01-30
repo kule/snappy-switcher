@@ -152,24 +152,85 @@ static const struct wl_registry_listener registry_listener = {
     .global = registry_global, .global_remove = registry_global_remove};
 
 /* --- Logic --- */
+
+static void destroy_panel(void) {
+  if (layer_surface) {
+    zwlr_layer_surface_v1_destroy(layer_surface);
+    layer_surface = NULL;
+  }
+  if (surface) {
+    wl_surface_destroy(surface);
+    surface = NULL;
+  }
+  visible = false;
+  LOG("Panel destroyed");
+}
+
+static void create_panel(void) {
+  if (surface) {
+    LOG("Panel already exists");
+    return;
+  }
+
+  surface = wl_compositor_create_surface(compositor);
+  if (!surface) {
+    LOG("Failed to create surface");
+    return;
+  }
+
+  layer_surface = zwlr_layer_shell_v1_get_layer_surface(
+      layer_shell, surface, NULL, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
+      "snappy-switcher");
+  if (!layer_surface) {
+    LOG("Failed to create layer surface");
+    wl_surface_destroy(surface);
+    surface = NULL;
+    return;
+  }
+
+  zwlr_layer_surface_v1_set_size(layer_surface, 1, 1); // 最小初始尺寸
+  zwlr_layer_surface_v1_set_anchor(layer_surface, 0);
+  zwlr_layer_surface_v1_set_keyboard_interactivity(layer_surface, 0);
+  zwlr_layer_surface_v1_add_listener(layer_surface, &layer_surface_listener,
+                                     NULL);
+
+  wl_surface_commit(surface);
+  wl_display_roundtrip(display);
+
+  LOG("Panel created");
+}
+
 static void hide_switcher(void) {
   if (!visible)
     return;
+
   visible = false;
-  /* Detach buffer to hide */
-  wl_surface_attach(surface, NULL, 0, 0);
-  wl_surface_commit(surface);
-  wl_display_flush(display);
+
+  if (config && config->follow_monitor) {
+    destroy_panel();
+  } else {
+    wl_surface_attach(surface, NULL, 0, 0);
+    wl_surface_commit(surface);
+    wl_display_flush(display);
+    LOG("Panel hidden (not destroyed)");
+  }
 }
 
 static void show_switcher(void) {
-  if (visible)
-    return;
-
   LOG("Showing switcher...");
+
+  if (config && config->follow_monitor && !surface) {
+    create_panel();
+    if (!surface) {
+      LOG("Failed to create panel");
+      return;
+    }
+  } else if (visible) {
+    return;
+  }
+
   input_reset_alt_state();
 
-  /* Refresh Data */
   app_state_free(&app_state);
   app_state_init(&app_state);
 
@@ -183,22 +244,12 @@ static void show_switcher(void) {
     return;
   }
 
-  /* Default Selection: 2nd window (MRU) if available, else 1st */
   app_state.selected_index = (app_state.count > 1) ? 1 : 0;
 
-  /* Layout */
   calculate_dimensions(&app_state, &app_state.width, &app_state.height);
   zwlr_layer_surface_v1_set_size(layer_surface, app_state.width,
                                  app_state.height);
   zwlr_layer_surface_v1_set_keyboard_interactivity(layer_surface, 1);
-
-  /* Fix Startup Race: Sync with compositor on first show */
-  // if (!first_show_done) {
-  //   LOG("First show sync...");
-  //   wl_surface_commit(surface);
-  //   wl_display_roundtrip(display);
-  //   first_show_done = true;
-  // }
 
   visible = true;
   wl_surface_commit(surface);
