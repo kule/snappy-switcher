@@ -44,6 +44,7 @@ typedef struct {
   bool show_letter_fallback;
 
   /* View Mode */
+  bool follow_monitor;
   ViewMode mode;
 } Config;
 

@@ -53,7 +53,6 @@ src/wlr-layer-shell-unstable-v1-protocol.c:
 src/wlr-layer-shell-unstable-v1-client-protocol.h:
 	$(WAYLAND_SCANNER) client-header $(LAYER_SHELL_XML) $@
 
-# Generate Foreign Toplevel Management Protocol (新增)
 src/wlr-foreign-toplevel-management-unstable-v1-protocol.c:
 	$(WAYLAND_SCANNER) private-code $(FOREIGN_TOPLEVEL_XML) $@
 src/wlr-foreign-toplevel-management-unstable-v1-client-protocol.h:
@@ -63,7 +62,6 @@ src/wlr-foreign-toplevel-management-unstable-v1-client-protocol.h:
 src/main.o: src/main.c src/xdg-shell-client-protocol.h src/wlr-layer-shell-unstable-v1-client-protocol.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# 新增：wlr_backend 需要 foreign toplevel 协议头文件
 src/wlr_backend.o: src/wlr_backend.c src/wlr-foreign-toplevel-management-unstable-v1-client-protocol.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
