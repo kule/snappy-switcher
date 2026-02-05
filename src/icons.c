@@ -20,6 +20,73 @@
 #define MAX_CACHE 64
 #define MAX_PATH 512
 
+/* =========================================================================
+ * CLASS NAME MAPPING TABLE
+ * ========================================================================= */
+
+/* Maps WM_CLASS names that don't match their icon/desktop file names */
+typedef struct {
+  const char *wm_class;  /* WM_CLASS as reported by Wayland */
+  const char *icon_name; /* Correct icon or desktop file name */
+} ClassMapping;
+
+static const ClassMapping class_mappings[] = {
+    /* Sublime */
+    {"sublime_merge", "sublime-merge"},
+    {"sublime_text", "sublime-text"},
+
+    /* JetBrains IDEs */
+    {"jetbrains-idea", "idea"},
+    {"jetbrains-idea-ce", "idea"},
+    {"jetbrains-pycharm", "pycharm"},
+    {"jetbrains-pycharm-ce", "pycharm"},
+    {"jetbrains-clion", "clion"},
+    {"jetbrains-webstorm", "webstorm"},
+    {"jetbrains-goland", "goland"},
+    {"jetbrains-rider", "rider"},
+    {"jetbrains-datagrip", "datagrip"},
+
+    /* VS Code variants */
+    {"code-oss", "visual-studio-code"},
+    {"code", "visual-studio-code"},
+    {"vscodium", "vscodium"},
+
+    /* Gaming */
+    {"steam", "steam"},
+    {"Steam", "steam"},
+
+    /* Browsers */
+    {"google-chrome", "google-chrome"},
+    {"chromium-browser", "chromium"},
+
+    /* Media */
+    {"vlc", "vlc"},
+    {"mpv", "mpv"},
+
+    /* Communication */
+    {"discord", "discord"},
+    {"slack", "slack"},
+    {"telegram-desktop", "telegram"},
+    {"TelegramDesktop", "telegram"},
+
+    /* Terminals */
+    {"Alacritty", "Alacritty"},
+    {"kitty", "kitty"},
+    {"foot", "foot"},
+
+    /* Misc */
+    {"org.wezfurlong.wezterm", "org.wezfurlong.wezterm"},
+    {"wezterm-gui", "org.wezfurlong.wezterm"},
+    {"Gimp-2.10", "gimp"},
+    {"gimp-2.99", "gimp"},
+
+    {NULL, NULL} /* Sentinel */
+};
+
+/* =========================================================================
+ * INTERNAL TYPES
+ * ========================================================================= */
+
 /* Icon cache entry */
 typedef struct {
   char class_name[128];
@@ -27,7 +94,10 @@ typedef struct {
   cairo_surface_t *surface;
 } IconCacheEntry;
 
-/* Global state */
+/* =========================================================================
+ * GLOBAL STATE
+ * ========================================================================= */
+
 static IconCacheEntry icon_cache[MAX_CACHE];
 static int cache_count = 0;
 static char current_theme[64] = "Tela-dracula";
@@ -41,6 +111,10 @@ static const char *icon_dirs[8];
 /* Desktop file search paths */
 static char user_desktop_path[MAX_PATH];
 static const char *desktop_dirs[8];
+
+/* =========================================================================
+ * UTILITY FUNCTIONS
+ * ========================================================================= */
 
 /* Convert string to lowercase */
 static void to_lowercase(char *dest, const char *src, size_t max) {
@@ -57,7 +131,20 @@ static int file_exists(const char *path) {
   return stat(path, &st) == 0 && S_ISREG(st.st_mode);
 }
 
-/* Initialize paths */
+/* Lookup mapped class name, returns NULL if no mapping exists */
+static const char *get_mapped_class(const char *class_name) {
+  for (int i = 0; class_mappings[i].wm_class != NULL; i++) {
+    if (strcasecmp(class_mappings[i].wm_class, class_name) == 0) {
+      return class_mappings[i].icon_name;
+    }
+  }
+  return NULL;
+}
+
+/* =========================================================================
+ * PATH INITIALIZATION
+ * ========================================================================= */
+
 static void init_paths(void) {
   const char *home = getenv("HOME");
   const char *data_home = getenv("XDG_DATA_HOME");
@@ -97,7 +184,10 @@ static void init_paths(void) {
   desktop_dirs[desktop_idx] = NULL;
 }
 
-/* Find icon in a specific theme directory */
+/* =========================================================================
+ * ICON THEME SEARCH
+ * ========================================================================= */
+
 static char *find_icon_in_theme(const char *theme, const char *icon_name,
                                 int size) {
   static char path[MAX_PATH];
@@ -151,6 +241,10 @@ static char *find_icon_in_theme(const char *theme, const char *icon_name,
 
   return NULL;
 }
+
+/* =========================================================================
+ * DESKTOP FILE HANDLING
+ * ========================================================================= */
 
 /* Scan directory for desktop file matching class name */
 static char *find_desktop_file_by_scan(const char *class_name) {
@@ -272,6 +366,10 @@ static char *find_desktop_icon(const char *class_name) {
   return icon_name;
 }
 
+/* =========================================================================
+ * ICON LOADERS
+ * ========================================================================= */
+
 /* Load PNG icon with high-quality scaling */
 static cairo_surface_t *load_png_icon(const char *path, int size) {
   cairo_surface_t *surface = cairo_image_surface_create_from_png(path);
@@ -310,31 +408,94 @@ static cairo_surface_t *load_png_icon(const char *path, int size) {
 }
 
 #ifdef HAVE_RSVG
-/* Load SVG icon via librsvg */
+/* Load SVG icon via librsvg with robust viewport handling */
 static cairo_surface_t *load_svg_icon(const char *path, int size) {
   GError *error = NULL;
   RsvgHandle *handle = rsvg_handle_new_from_file(path, &error);
   if (!handle) {
     if (error) {
-      LOG("SVG load error: %s", error->message);
+      LOG("SVG load error (%s): %s", path, error->message);
       g_error_free(error);
     }
     return NULL;
   }
 
+  /* Create target surface - clear it explicitly */
   cairo_surface_t *surface =
       cairo_image_surface_create(CAIRO_FORMAT_ARGB32, size, size);
-  cairo_t *cr = cairo_create(surface);
+  if (cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS) {
+    LOG("Failed to create cairo surface for SVG");
+    g_object_unref(handle);
+    return NULL;
+  }
 
-  RsvgRectangle viewport = {0, 0, size, size};
-  if (!rsvg_handle_render_document(handle, cr, &viewport, &error)) {
-    LOG("SVG render error: %s", error ? error->message : "unknown");
+  cairo_t *cr = cairo_create(surface);
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS) {
+    LOG("Failed to create cairo context for SVG");
+    cairo_surface_destroy(surface);
+    g_object_unref(handle);
+    return NULL;
+  }
+
+  /* Clear the surface to transparent */
+  cairo_save(cr);
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
+  cairo_restore(cr);
+
+  /* Set operator back to normal compositing */
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+  /* Get intrinsic dimensions to check if SVG has valid sizing */
+  gboolean has_width, has_height, has_viewbox;
+  RsvgLength intrinsic_width, intrinsic_height;
+  RsvgRectangle intrinsic_viewbox;
+
+  rsvg_handle_get_intrinsic_dimensions(handle, &has_width, &intrinsic_width,
+                                       &has_height, &intrinsic_height,
+                                       &has_viewbox, &intrinsic_viewbox);
+
+  /* Define viewport at target size */
+  RsvgRectangle viewport = {0.0, 0.0, (double)size, (double)size};
+
+  /* Render the SVG into the viewport */
+  gboolean render_ok =
+      rsvg_handle_render_document(handle, cr, &viewport, &error);
+
+  if (!render_ok) {
+    LOG("SVG render failed (%s): %s", path, error ? error->message : "unknown");
     if (error)
       g_error_free(error);
+
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
     g_object_unref(handle);
     return NULL;
+  }
+
+  /* Flush the surface to ensure all drawing operations are complete */
+  cairo_surface_flush(surface);
+
+  /* Validate the surface has actual content (not fully transparent) */
+  unsigned char *data = cairo_image_surface_get_data(surface);
+  int stride = cairo_image_surface_get_stride(surface);
+  int has_content = 0;
+
+  for (int y = 0; y < size && !has_content; y++) {
+    unsigned char *row = data + y * stride;
+    for (int x = 0; x < size; x++) {
+      /* Check alpha channel (ARGB32 format: B,G,R,A in memory on little-endian)
+       */
+      if (row[x * 4 + 3] > 0) {
+        has_content = 1;
+        break;
+      }
+    }
+  }
+
+  if (!has_content) {
+    LOG("SVG rendered but appears empty: %s", path);
+    /* Don't fail - some icons may be intentionally sparse */
   }
 
   cairo_destroy(cr);
@@ -342,6 +503,10 @@ static cairo_surface_t *load_svg_icon(const char *path, int size) {
   return surface;
 }
 #endif
+
+/* =========================================================================
+ * PUBLIC API
+ * ========================================================================= */
 
 /* Initialize icon system */
 void icons_init(const char *theme_name, const char *fallback) {
@@ -365,7 +530,15 @@ cairo_surface_t *load_app_icon(const char *class_name, int size) {
   if (!class_name || !class_name[0])
     return NULL;
 
-  /* Check cache first */
+  /* Apply class name mapping first */
+  const char *effective_class = get_mapped_class(class_name);
+  if (effective_class) {
+    LOG("Mapped class '%s' -> '%s'", class_name, effective_class);
+  } else {
+    effective_class = class_name;
+  }
+
+  /* Check cache using ORIGINAL class name (for consistency) */
   for (int i = 0; i < cache_count; i++) {
     if (strcmp(icon_cache[i].class_name, class_name) == 0 &&
         icon_cache[i].size == size) {
@@ -376,9 +549,10 @@ cairo_surface_t *load_app_icon(const char *class_name, int size) {
     }
   }
 
-  /* Find icon name from desktop file */
-  char *icon_name = find_desktop_icon(class_name);
-  LOG("Class '%s' -> icon '%s'", class_name, icon_name ? icon_name : "(null)");
+  /* Find icon name from desktop file using effective (mapped) class */
+  char *icon_name = find_desktop_icon(effective_class);
+  LOG("Class '%s' -> icon '%s'", effective_class,
+      icon_name ? icon_name : "(null)");
 
   if (!icon_name) {
     /* Cache NULL result */
@@ -418,6 +592,8 @@ cairo_surface_t *load_app_icon(const char *class_name, int size) {
       }
       return surface;
     }
+    /* SVG/PNG load failed - fall through to theme search */
+    LOG("Direct load failed, trying theme search for: %s", icon_name);
   }
 
   /* Find icon file in themes */
@@ -445,12 +621,39 @@ cairo_surface_t *load_app_icon(const char *class_name, int size) {
 #ifdef HAVE_RSVG
       else if (strcasecmp(ext, ".svg") == 0) {
         surface = load_svg_icon(icon_path, size);
+        /* If SVG fails, try to find a PNG fallback */
+        if (!surface) {
+          LOG("SVG load failed, trying PNG fallback for: %s", icon_name);
+          /* Force PNG by checking raster sizes first */
+          const char *raster_sizes[] = {"256x256", "128x128", "64x64", "48x48"};
+          for (size_t rs = 0;
+               rs < sizeof(raster_sizes) / sizeof(raster_sizes[0]) && !surface;
+               rs++) {
+            char png_try[MAX_PATH];
+            for (int d = 0; icon_dirs[d] && !surface; d++) {
+              const char *cats[] = {"apps", "applications"};
+              for (size_t cat = 0;
+                   cat < sizeof(cats) / sizeof(cats[0]) && !surface; cat++) {
+                snprintf(png_try, sizeof(png_try), "%s/%s/%s/%s/%s.png",
+                         icon_dirs[d], "hicolor", raster_sizes[rs], cats[cat],
+                         icon_name);
+                if (file_exists(png_try)) {
+                  surface = load_png_icon(png_try, size);
+                  if (surface) {
+                    LOG("PNG fallback loaded: %s", png_try);
+                  }
+                }
+              }
+            }
+          }
+        }
       }
 #endif
     }
   }
 
-  /* Cache result */
+  /* Cache result (including original class_name for cache lookup consistency)
+   */
   if (cache_count < MAX_CACHE) {
     strncpy(icon_cache[cache_count].class_name, class_name, 127);
     icon_cache[cache_count].size = size;

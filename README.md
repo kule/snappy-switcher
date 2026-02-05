@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/License-GPL3-blue?style=for-the-badge&logo=gnu)](LICENSE)
 [![Language](https://img.shields.io/badge/Language-C-orange?style=for-the-badge&logo=c)](https://en.cppreference.com/w/c)
 [![Platform](https://img.shields.io/badge/Platform-Hyprland-58E1FF?style=for-the-badge&logo=wayland)](https://hyprland.org/)
-[![Version](https://img.shields.io/badge/Version-2.0-success?style=for-the-badge)]()
+[![Version](https://img.shields.io/badge/Version-2.1.0-success?style=for-the-badge)]()
 [![AUR](https://img.shields.io/aur/version/snappy-switcher?color=blue&label=AUR&logo=arch-linux&style=for-the-badge)](https://aur.archlinux.org/packages/snappy-switcher)
 
 <br/>
@@ -33,6 +33,7 @@
 | ⚡ **Native Performance** | Pure C with Wayland Layer Shell. No Electron. No lag. |
 | 🔄 **Crash Recovery** | Socket takeover protocol ensures seamless recovery if the daemon restarts. |
 | 🖼️ **Polished Visuals** | Animated selection, drop shadows, rounded corners, and app badges—all Cairo-rendered. |
+| 🖼️ **SVG & Flatpak Support** | Native SVG icon rendering and automatic Flatpak icon discovery. *(New in v2.1)* |
 
 ---
 
@@ -127,6 +128,18 @@ git clone https://github.com/OpalAayan/snappy-switcher.git
 cd snappy-switcher
 makepkg -si
 ```
+
+</details>
+
+<details>
+<summary>📦 <b>Other Linux Distributions (Fedora, etc.)</b></summary>
+
+**Install dependencies (Fedora/RHEL):**
+```bash
+sudo dnf install wayland-devel cairo-devel pango-devel json-c-devel libxkbcommon-devel glib2-devel librsvg2-devel
+```
+
+> **Note:** RPM packages are available for Fedora/RHEL. See the included `snappy-switcher.spec` file for building via `rpmbuild` or Copr.
 
 </details>
 
@@ -451,7 +464,7 @@ make clean && make
 
 ---
 
-##  Roadmap (v2.5) Future Planing
+##  Roadmap (v2.5) Future Planning
 
 | Feature | Description |
 |---------|-------------|

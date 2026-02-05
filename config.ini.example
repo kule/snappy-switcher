@@ -1,6 +1,6 @@
 # ╔═══════════════════════════════════════════════════════════════════════════╗
 # ║                     SNAPPY SWITCHER CONFIGURATION                         ║
-# ║                           v1.0 Stable Release                             ║
+# ║                           v2.1.0 Stable Release                             ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 #
 # This file controls all aspects of the Snappy Switcher window switcher.
@@ -36,9 +36,13 @@ follow_monitor = false
 #   snappy-slate.ini      - Default dark theme (Catppuccin-inspired)
 #   catppuccin-mocha.ini  - Catppuccin Mocha
 #   catppuccin-latte.ini  - Catppuccin Latte (light)
+#   cyberpunk.ini         - Cyberpunk theme
 #   nord.ini              - Nord color scheme
+#   nordic.ini            - Nordic color scheme
 #   dracula.ini           - Dracula theme
+#   rose-pine.ini         - Rosé Pine theme
 #   gruvbox-dark.ini      - Gruvbox Dark
+#   grovestorm.ini        - Gruvbox + Evergreen theme
 #   tokyo-night.ini       - Tokyo Night
 #
 name = snappy-slate.ini

@@ -1,4 +1,4 @@
-# Makefile - Snappy Switcher v2.0.0
+# Makefile - Snappy Switcher v2.1.0
 CC = gcc
 PKG_CFLAGS = $(shell pkg-config --cflags wayland-client cairo pango pangocairo json-c xkbcommon)
 PKG_LIBS = $(shell pkg-config --libs wayland-client wayland-cursor cairo pango pangocairo json-c xkbcommon glib-2.0 gobject-2.0)
@@ -10,7 +10,8 @@ ifneq ($(RSVG_LIBS),)
   RSVG_FLAG = -DHAVE_RSVG
 endif
 
-CFLAGS = -Wall -Wextra -g -D_POSIX_C_SOURCE=200809L $(PKG_CFLAGS) $(RSVG_CFLAGS) $(RSVG_FLAG)
+# Added -O2 for release builds, kept -g for symbols
+CFLAGS = -Wall -Wextra -O2 -g -D_POSIX_C_SOURCE=200809L $(PKG_CFLAGS) $(RSVG_CFLAGS) $(RSVG_FLAG)
 LIBS = $(PKG_LIBS) $(RSVG_LIBS) -lm
 
 # Installation paths
@@ -53,6 +54,7 @@ src/wlr-layer-shell-unstable-v1-protocol.c:
 src/wlr-layer-shell-unstable-v1-client-protocol.h:
 	$(WAYLAND_SCANNER) client-header $(LAYER_SHELL_XML) $@
 
+# Generate Foreign Toplevel Protocol
 src/wlr-foreign-toplevel-management-unstable-v1-protocol.c:
 	$(WAYLAND_SCANNER) private-code $(FOREIGN_TOPLEVEL_XML) $@
 src/wlr-foreign-toplevel-management-unstable-v1-client-protocol.h:
@@ -73,7 +75,7 @@ src/%.o: src/%.c
 # ═══════════════════════════════════════════════════════════════════════════
 install: $(TARGET)
 	@echo "╔═══════════════════════════════════════════════════════════════╗"
-	@echo "║           Installing Snappy Switcher v2.0                     ║"
+	@echo "║           Installing Snappy Switcher v2.1.0                   ║"
 	@echo "╚═══════════════════════════════════════════════════════════════╝"
 	@echo ""
 	@echo "Installing binaries to $(BINDIR)..."

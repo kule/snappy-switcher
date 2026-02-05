@@ -14,7 +14,7 @@
       {
         packages.default = pkgs.stdenv.mkDerivation {
           pname = "snappy-switcher";
-          version = "2.0";
+          version = "2.1.0";
 
           src = ./.;
 
@@ -29,7 +29,7 @@
             wayland-protocols
             cairo
             pango
-            json_c
+            json-c
             libxkbcommon
             glib
             librsvg
@@ -63,7 +63,7 @@
           meta = with pkgs.lib; {
             description = "A fast, keyboard-driven window switcher for Wayland compositors";
             homepage = "https://github.com/OpalAayan/snappy-switcher";
-            license = licenses.mit;
+            license = licenses.gpl3;
             platforms = platforms.linux;
             maintainers = [ ];
             mainProgram = "snappy-switcher";
@@ -73,7 +73,6 @@
         # Development shell with all dependencies
         devShells.default = pkgs.mkShell {
           inputsFrom = [ self.packages.${system}.default ];
-
           packages = with pkgs; [
             gcc
             gnumake
