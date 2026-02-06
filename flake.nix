@@ -19,7 +19,7 @@
           src = ./.;
 
           nativeBuildInputs = with pkgs; [
-            pkg-config
+            pkgconfig
             wayland-scanner
             makeWrapper
           ];
@@ -29,7 +29,7 @@
             wayland-protocols
             cairo
             pango
-            json-c
+            json_c
             libxkbcommon
             glib
             librsvg

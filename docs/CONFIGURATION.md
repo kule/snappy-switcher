@@ -79,14 +79,14 @@ flowchart LR
         C3["Terminal"]
     end
     
-    style O1 fill:#313244,stroke:#89b4fa,color:#cdd6f4
-    style O2 fill:#313244,stroke:#89b4fa,color:#cdd6f4
-    style O3 fill:#313244,stroke:#89b4fa,color:#cdd6f4
-    style O4 fill:#313244,stroke:#89b4fa,color:#cdd6f4
-    style O5 fill:#313244,stroke:#89b4fa,color:#cdd6f4
-    style C1 fill:#313244,stroke:#a6e3a1,color:#cdd6f4
-    style C2 fill:#313244,stroke:#a6e3a1,color:#cdd6f4
-    style C3 fill:#313244,stroke:#a6e3a1,color:#cdd6f4
+    style O1 fill:#303446,stroke:#f5c2e7,color:#f5c2e7,stroke-width:2px
+    style O2 fill:#303446,stroke:#f5c2e7,color:#f5c2e7,stroke-width:2px
+    style O3 fill:#303446,stroke:#f5c2e7,color:#f5c2e7,stroke-width:2px
+    style O4 fill:#303446,stroke:#f5c2e7,color:#f5c2e7,stroke-width:2px
+    style O5 fill:#303446,stroke:#f5c2e7,color:#f5c2e7,stroke-width:2px
+    style C1 fill:#303446,stroke:#cba6f7,color:#cba6f7,stroke-width:2px
+    style C2 fill:#303446,stroke:#a6e3a1,color:#a6e3a1,stroke-width:2px
+    style C3 fill:#303446,stroke:#89dceb,color:#89dceb,stroke-width:2px
 ```
 
 | Key | Values | Default | Description |
