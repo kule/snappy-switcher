@@ -41,13 +41,12 @@ fallback = hicolor
   init: {
     'theme': 'base',
     'themeVariables': {
-      'primaryColor': '#4c566a',
-      'primaryTextColor': '#eceff4',
-      'primaryBorderColor': '#88c0d0',
-      'lineColor': '#81a1c1',
-      'secondaryColor': '#5e81ac',
-      'tertiaryColor': '#b48ead',
-      'fontFamily': 'arial'
+      'primaryColor': '#e0e7ff',
+      'primaryTextColor': '#0f172a',
+      'primaryBorderColor': '#4338ca',
+      'lineColor': '#6366f1',
+      'secondaryColor': '#f5d0fe',
+      'tertiaryColor': '#bae6fd'
     }
   }
 }%%
