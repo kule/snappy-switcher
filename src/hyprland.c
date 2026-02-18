@@ -191,7 +191,7 @@ static int parse_clients(const char *json_str, AppState *state) {
       continue;
 
     int wid = json_object_get_int(ws_id);
-    if (wid < 0)
+     if (wid == -1) 
       continue;
 
     json_object_object_get_ex(obj, "address", &addr);

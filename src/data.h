@@ -10,7 +10,7 @@ typedef struct {
   char *address;        /* Window address (hex string) */
   char *title;          /* Window title */
   char *class_name;     /* Application class name */
-  int workspace_id;     /* Workspace ID (-1 for special workspaces) */
+  int workspace_id;     /* Workspace ID (Negative for special workspaces) */
   int focus_history_id; /* Focus history ID (0 = most recently focused) */
   bool is_active;       /* Whether this window is currently focused */
   bool is_floating;     /* Whether this window is floating (not tiled) */
